@@ -1,0 +1,138 @@
+import java.util.*;
+import java.io.*;
+
+class Student {
+    int roll;
+    String name;
+    int total, present;
+
+    Student(int roll, String name) {
+        this.roll = roll;
+        this.name = name;
+    }
+
+    double percent() {
+        return total == 0 ? 0 : present * 100.0 / total;
+    }
+}
+
+public class Main {
+    static ArrayList<Student> list = new ArrayList<>();
+
+    static Student search(int roll) {
+        for (Student s : list)
+            if (s.roll == roll) return s;
+        return null;
+    }
+
+    static void load() {
+        try {
+            Scanner f = new Scanner(new File("students.txt"));
+            while (f.hasNextLine()) {
+                String[] a = f.nextLine().split(",");
+                Student s = new Student(Integer.parseInt(a[0]), a[1]);
+                s.total = Integer.parseInt(a[2]);
+                s.present = Integer.parseInt(a[3]);
+                list.add(s);
+            }
+            f.close();
+        } catch (Exception e) {}
+    }
+
+    static void save() {
+        try {
+            PrintWriter p = new PrintWriter("students.txt");
+            for (Student s : list)
+                p.println(s.roll + "," + s.name + "," + s.total + "," + s.present);
+            p.close();
+        } catch (Exception e) {}
+    }
+
+    static void add() {
+        Scanner sc = new Scanner(System.in);
+        System.out.print("Roll: ");
+        int r = sc.nextInt();
+        sc.nextLine();
+
+        if (search(r) != null) {
+            System.out.println("Duplicate roll number!");
+            return;
+        }
+
+        System.out.print("Name: ");
+        String n = sc.nextLine();
+        list.add(new Student(r, n));
+        System.out.println("Student added.");
+    }
+
+    static void mark() {
+        Scanner sc = new Scanner(System.in);
+        System.out.print("Roll: ");
+        Student s = search(sc.nextInt());
+
+        if (s == null) {
+            System.out.println("Roll not found.");
+            return;
+        }
+
+        System.out.print("Attendance (P/A): ");
+        char c = sc.next().toUpperCase().charAt(0);
+
+        if (c != 'P' && c != 'A') {
+            System.out.println("Invalid input!");
+            return;
+        }
+
+        s.total++;
+        if (c == 'P') s.present++;
+        System.out.println("Attendance marked.");
+    }
+
+    static void display() {
+        for (Student s : list)
+            System.out.printf("%d | %s | %d/%d | %.1f%%\n",
+                    s.roll, s.name, s.present, s.total, s.percent());
+    }
+
+    static void defaulters() {
+        for (Student s : list)
+            if (s.percent() < 75)
+                System.out.printf("%d | %s | %.1f%%\n",
+                        s.roll, s.name, s.percent());
+    }
+
+    static void sort() {
+        list.sort((a, b) -> Double.compare(b.percent(), a.percent()));
+        display();
+    }
+
+    public static void main(String[] args) {
+        Scanner sc = new Scanner(System.in);
+        load();
+
+        while (true) {
+            System.out.println("\n1.Add  2.Mark Attendance  3.Search");
+            System.out.println("4.Display  5.Defaulters  6.Sort  7.Exit");
+            System.out.print("Choice: ");
+            int ch = sc.nextInt();
+
+            switch (ch) {
+                case 1: add(); break;
+                case 2: mark(); break;
+                case 3:
+                    System.out.print("Roll: ");
+                    Student s = search(sc.nextInt());
+                    if (s != null)
+                        System.out.printf("%d | %s | %d/%d | %.1f%%\n",
+                                s.roll, s.name, s.present, s.total, s.percent());
+                    else System.out.println("Student not found.");
+                    break;
+                case 4: display(); break;
+                case 5: defaulters(); break;
+                case 6: sort(); break;
+                case 7: save(); System.exit(0);
+                default: System.out.println("Invalid choice.");
+            }
+        }
+    }
+}
